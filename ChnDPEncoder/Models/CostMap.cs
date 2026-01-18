@@ -12,13 +12,12 @@ internal sealed class CostMap
     /// <summary> 缺失的键对 </summary>
     private readonly HashSet<int> _missingPairs = [];
 
-    /// <summary> 从文件解析键对开销表 </summary>
+    /// <summary> 解析键对开销表文件 </summary>
     public CostMap(string path) {
         var data = File.ReadLines(path)
-            .Select(static line => line.Split('\t', 3))
-            .Where(static parts => parts is [{ Length: 2 }, _])
-            .Select(static parts =>
-                (Key: (parts[0][0] << 16) | parts[0][1], Cost: double.Parse(parts[1])))
+            .Where(static line => line is [_, _, '\t', _, ..])
+            .Select(static line =>
+                (Key: (line[0] << 16) | line[1], Cost: double.Parse(line.AsSpan(3))))
             .ToArray();
         _costMap = data.ToDictionary(static kvp => kvp.Key, static kvp => kvp.Cost);
         _meanCost = data.Average(static kvp => kvp.Cost);
@@ -31,19 +30,22 @@ internal sealed class CostMap
             .ToHashSet();
 
     /// <summary> 获取编码的总开销 </summary>
-    public double GetCost(ReadOnlySpan<char> code) {
-        if (code.Length < 2)
-            return 0;
-        var sum = 0d;
-        for (var (i, key) = (1, (int)code[0]); i < code.Length; i++) {
-            key = (key << 16) | code[i];
-            if (_costMap.TryGetValue(key, out var cost))
-                sum += cost;
-            else {
-                _missingPairs.Add(key);
-                sum += _meanCost;
+    public double this[ReadOnlySpan<char> code] {
+        get {
+            if (code.Length < 2)
+                return 0;
+
+            var sum = 0d;
+            for (var (i, key) = (1, (int)code[0]); i < code.Length; i++) {
+                key = (key << 16) | code[i];
+                if (_costMap.TryGetValue(key, out var cost))
+                    sum += cost;
+                else {
+                    _ = _missingPairs.Add(key);
+                    sum += _meanCost;
+                }
             }
+            return sum;
         }
-        return sum;
     }
 }
