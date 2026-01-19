@@ -1,10 +1,12 @@
 namespace ChnDPEncoder.Models;
 
+using System.Collections.Frozen;
+
 /// <summary> 键对开销表 </summary>
 internal sealed class CostMap
 {
     /// <summary> 键对开销表 </summary>
-    private readonly Dictionary<int, double> _costMap;
+    private readonly FrozenDictionary<int, double> _costMap;
 
     /// <summary> 平均开销 </summary>
     private readonly double _meanCost;
@@ -19,15 +21,15 @@ internal sealed class CostMap
             .Select(static line =>
                 (Key: (line[0] << 16) | line[1], Cost: double.Parse(line.AsSpan(3))))
             .ToArray();
-        _costMap = data.ToDictionary(static kvp => kvp.Key, static kvp => kvp.Cost);
+        _costMap = data.ToFrozenDictionary(static kvp => kvp.Key, static kvp => kvp.Cost);
         _meanCost = data.Average(static kvp => kvp.Cost);
     }
 
     /// <summary> 缺失的键对 </summary>
-    public IReadOnlySet<(char A, char B)> MissingPairs =>
+    public FrozenSet<(char A, char B)> MissingPairs =>
         _missingPairs.Select(static key => (A: (char)(key >> 16), B: (char)(key & 0xFFFF)))
             .Where(static pair => !char.IsWhiteSpace(pair.A) && !char.IsWhiteSpace(pair.B))
-            .ToHashSet();
+            .ToFrozenSet();
 
     /// <summary> 获取编码的总开销 </summary>
     public double this[ReadOnlySpan<char> code] {
