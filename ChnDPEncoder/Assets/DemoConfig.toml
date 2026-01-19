@@ -9,9 +9,6 @@ rime_dict = "RIME.dict.yaml"
 # 待编码文本路径
 texts = ["Text.txt"]
 
-# 是否自动上屏（无需空格）
-auto_commit = true
-
 # 键盘布局：各行各指键值
 layout = [
     "1234567890-=", # 数字
