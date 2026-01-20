@@ -1,3 +1,4 @@
 <Solution>
+    <Project Path="Benchmarks/Benchmarks.csproj"/>
     <Project Path="ChnDPEncoder/ChnDPEncoder.csproj"/>
 </Solution>
