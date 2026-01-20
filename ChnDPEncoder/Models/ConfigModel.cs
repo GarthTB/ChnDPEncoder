@@ -7,13 +7,13 @@ using Tomlyn.Model;
 /// <summary> 配置模型 </summary>
 /// <param name="Costs"> 键对开销表 </param>
 /// <param name="Dict"> 前缀树词库 </param>
-/// <param name="UsedCodes"> 词库中存在的编码 </param>
+/// <param name="NeedSpace"> 需要空格分隔的编码 </param>
 /// <param name="Texts"> 待编码文本路径 </param>
 /// <param name="Layout"> 键盘布局表 </param>
 internal sealed record ConfigModel(
     CostMap Costs,
     TrieDict Dict,
-    FrozenSet<string> UsedCodes,
+    FrozenSet<(string, char)> NeedSpace,
     IEnumerable<string> Texts,
     LayoutMap Layout)
 {
@@ -24,7 +24,7 @@ internal sealed record ConfigModel(
             ? new(costsPath)
             : throw new ArgumentException("键对开销表路径缺失");
         TrieDict dict = toml["rime_dict"] is string dictPath
-            ? new(dictPath, costs, out var usedCodes)
+            ? new(dictPath, costs, out var needSpace)
             : throw new ArgumentException("RIME词库路径缺失");
         var sTexts = toml["texts"] is TomlArray { Count: > 0 } oTexts
             ? oTexts.Select(static obj =>
@@ -34,6 +34,6 @@ internal sealed record ConfigModel(
             ? oKeys.Select(static obj => obj as string ?? throw new ArgumentException("键盘布局格式错误"))
             : throw new ArgumentException("键盘布局缺失或格式错误");
         LayoutMap layout = new(sKeys.ToArray());
-        return new(costs, dict, usedCodes, sTexts, layout);
+        return new(costs, dict, needSpace, sTexts, layout);
     }
 }

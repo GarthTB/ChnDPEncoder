@@ -10,7 +10,7 @@ internal sealed class TrieDict
     private readonly FrozenDictionary<char, Node> _root;
 
     /// <summary> 将词库文件解析为前缀树 </summary>
-    public TrieDict(string path, CostMap costMap, out FrozenSet<string> usedCodes) {
+    public TrieDict(string path, CostMap costMap, out FrozenSet<(string, char)> needSpace) {
         var entries = File.ReadLines(path)
             .Select(static (line, idx) => (idx, Parts: line.Split('\t', 4)))
             .Where(static tup => tup.Parts is [{ Length: > 0 } word, { Length: > 0 }, ..]
@@ -39,30 +39,34 @@ internal sealed class TrieDict
                 node.Min = (code, cost);
         }
         _root = root.Children.ToFrozenDictionary();
-        usedCodes = codes.ToFrozenSet();
+        needSpace = codes.Where(static code => code.Length > 1)
+            .Select(static code => (code[..^1], code[^1]))
+            .ToFrozenSet();
     }
 
     /// <summary> 查找文本所有起始词的编码及其开销 </summary>
     /// <param name="text"> 文本 </param>
-    /// <param name="prefixes"> 起始词的长度、编码、开销（复用列表） </param>
-    /// <returns> 是否有词到达文本末端 </returns>
+    /// <param name="wordInfos"> 起始词的长度、编码、开销（复用列表） </param>
+    /// <returns> 是否在到达文本末端前查找殆尽 </returns>
     /// <remarks> 会先清空List </remarks>
     public bool FindPrefixes(
         ReadOnlySpan<char> text,
-        List<(int WordLen, string Code, double Cost)> prefixes) {
-        prefixes.Clear();
-
-        if (text.IsEmpty || !_root.TryGetValue(text[0], out var first))
+        List<(int Len, string Code, double Cost)> wordInfos) {
+        wordInfos.Clear();
+        if (text.IsEmpty)
             return false;
+
+        if (!_root.TryGetValue(text[0], out var first))
+            return true;
         if (first.Min is {} firstMin)
-            prefixes.Add((1, firstMin.Code, firstMin.Cost));
+            wordInfos.Add((1, firstMin.Code, firstMin.Cost));
 
         for (var (i, node) = (1, first); i < text.Length; i++)
             if (node.Children is null || !node.Children.TryGetValue(text[i], out node))
-                return false;
+                return true;
             else if (node.Min is {} min)
-                prefixes.Add((i + 1, min.Code, min.Cost));
-        return true;
+                wordInfos.Add((i + 1, min.Code, min.Cost));
+        return false;
     }
 
     /// <summary> 前缀树节点 </summary>

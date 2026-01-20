@@ -9,7 +9,7 @@ try {
       + "仓库：https://github.com/GarthTB/ChnDPEncoder\n"
       + "加载配置...");
     var config = ConfigModel.FromToml("Config.toml");
-    Encoder encoder = new(config.Costs, config.Dict, config.UsedCodes);
+    Encoder encoder = new(config.Costs, config.Dict, config.NeedSpace);
     WriteLine("配置就绪，开始编码...");
     foreach (var inPath in config.Texts) {
         var (textLen, code, cost) = encoder.Encode(inPath);
