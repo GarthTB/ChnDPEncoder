@@ -14,7 +14,7 @@ internal sealed record ConfigModel(
     CostMap Costs,
     TrieDict Dict,
     FrozenSet<string> UsedCodes,
-    string[] Texts,
+    IEnumerable<string> Texts,
     LayoutMap Layout)
 {
     /// <summary> 从TOML文件加载配置 </summary>
@@ -34,6 +34,6 @@ internal sealed record ConfigModel(
             ? oKeys.Select(static obj => obj as string ?? throw new ArgumentException("键盘布局格式错误"))
             : throw new ArgumentException("键盘布局缺失或格式错误");
         LayoutMap layout = new(sKeys.ToArray());
-        return new(costs, dict, usedCodes, sTexts.ToArray(), layout);
+        return new(costs, dict, usedCodes, sTexts, layout);
     }
 }

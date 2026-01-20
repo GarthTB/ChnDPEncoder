@@ -23,18 +23,18 @@ internal sealed class TrieDict
         Node root = new() { Children = new(4096) }; // 预分配常用字
         HashSet<string> codes = new(4096);
         foreach (var (_, parts) in entries) {
-            var code = parts[1];
-            for (var (prefix, i) = (code, 2); !codes.Add(code);)
-                (code, i) = i < 10
-                    ? (prefix + i, i + 1) // 2-9：数字选重
-                    : (prefix += '=', 2); // 10：等号翻页
-            var cost = costMap[code];
             var node = parts[0]
                 .Aggregate(
                     root,
                     static (n, c) => (n.Children ??= []).TryGetValue(c, out var child)
                         ? child
                         : n.Children[c] = new());
+            var code = parts[1];
+            for (var (prefix, i) = (code, 2); !codes.Add(code);)
+                (code, i) = i < 10
+                    ? (prefix + i, i + 1) // 2-9：数字选重
+                    : (prefix += '=', 2); // 10：等号翻页
+            var cost = costMap[code];
             if (node.Min is null || node.Min?.Cost > cost)
                 node.Min = (code, cost);
         }
