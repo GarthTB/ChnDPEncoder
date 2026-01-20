@@ -1,6 +1,5 @@
 namespace ChnDPEncoder.Core;
 
-using System.Collections.Concurrent;
 using Models;
 
 /// <summary> 编码统计数据 </summary>
@@ -14,7 +13,7 @@ internal static class CodeStats
         LayoutMap layout) {
         if (textLen == 0)
             throw new ArgumentException("文本为空", nameof(textLen));
-        if (code.Length < 1)
+        if (code.Length < 2)
             throw new ArgumentException("编码过短", nameof(code));
 
         List<string> report = new(39) {
@@ -26,60 +25,53 @@ internal static class CodeStats
             $"字均开销\t{cost / textLen:0.######}",
             $"码均开销\t{cost / (code.Length - 1):0.######}"
         };
-        if (code.Length < 5) {
-            report.AddRange(["编码过短，不详细分析", "------编码------", code]);
-            return report;
-        }
 
         var fingerCnt = new int[9]; // 各手指计数
         var rowCnt = new int[5]; // 各排计数
+        var repeatLen = 1; // 连击长度
         var repeatCnt = new int[4]; // 2-5+连击计数
         var leapCnt = new int[3]; // 同指跨1-3排计数
         var switchCnt = 0; // 互击计数
 
-        _ = Parallel.ForEach(
-            Partitioner.Create(0, code.Length),
-            range => {
-                for (var (i, end) = range; i < end; i++) {
-                    var (finger, row) = layout[code[i]];
-                    if (finger is {} f)
-                        _ = Interlocked.Increment(ref fingerCnt[f]);
-                    if (row is {} r)
-                        _ = Interlocked.Increment(ref rowCnt[r]);
-                    if (i > 0)
-                        if (code[i] == code[i - 1])
-                            _ = Interlocked.Increment(ref repeatCnt[0]);
-                        else if (layout[code[i - 1]] is ({} f1, {} r1) and not (8, 4)
-                              && finger is {} f2 and not 8
-                              && row is {} r2 and not 4)
-                            if (f1 == f2 && Math.Abs(r1 - r2) is var rowDist and > 0)
-                                _ = Interlocked.Increment(ref leapCnt[rowDist - 1]);
-                            else if ((f1, f2) is (< 4, > 3) or (> 3, < 4))
-                                _ = Interlocked.Increment(ref switchCnt);
-                    if (i > 1 && code[i] == code[i - 1] && code[i] == code[i - 2])
-                        _ = Interlocked.Increment(ref repeatCnt[1]);
-                    if (i > 2
-                     && code[i] == code[i - 1]
-                     && code[i] == code[i - 2]
-                     && code[i] == code[i - 3])
-                        _ = Interlocked.Increment(ref repeatCnt[2]);
-                    if (i > 3
-                     && code[i] == code[i - 1]
-                     && code[i] == code[i - 2]
-                     && code[i] == code[i - 3]
-                     && code[i] == code[i - 4])
-                        _ = Interlocked.Increment(ref repeatCnt[3]);
-                }
-            });
+        var prev = code[0];
+        var (finger0, row0) = layout[prev];
+        if (finger0 is {} f0)
+            fingerCnt[f0]++;
+        if (row0 is {} r0)
+            rowCnt[r0]++;
 
+        foreach (var cur in code.AsSpan(1)) {
+            var (fCur, rCur) = layout[cur];
+            if (fCur is {} f)
+                fingerCnt[f]++;
+            if (rCur is {} r)
+                rowCnt[r]++;
+            if (prev == cur)
+                repeatLen++;
+            else {
+                if (repeatLen > 1) {
+                    repeatCnt[Math.Min(repeatLen - 2, 3)]++;
+                    repeatLen = 1;
+                }
+                if (layout[prev] is not (({} fp, {} rp) and (< 8, < 4))
+                 || fCur is not ({} fc and < 8)
+                 || rCur is not ({} rc and < 4))
+                    continue;
+                if (fp == fc && Math.Abs(rp - rc) is var rowDist and > 0)
+                    leapCnt[rowDist - 1]++;
+                else if ((fp < 4 && fc > 3) || (fp > 3 && fc < 4))
+                    switchCnt++;
+            }
+            prev = cur;
+        }
+
+        if (repeatLen > 1)
+            repeatCnt[Math.Min(repeatLen - 2, 3)]++;
         var leftSum = fingerCnt[..4].Sum();
         var rightSum = fingerCnt[4..8].Sum();
         var bias = leftSum + rightSum > 0
             ? 100d * (leftSum - rightSum) / (leftSum + rightSum)
             : 0;
-        var repeat2 = repeatCnt[0] - repeatCnt[1];
-        var repeat3 = repeatCnt[1] - repeatCnt[2];
-        var repeat4 = repeatCnt[2] - repeatCnt[3];
 
         report.AddRange(
         [
@@ -105,9 +97,9 @@ internal static class CodeStats
             "下排\t" + FormatResult(rowCnt[3], 1),
             "空格\t" + FormatResult(rowCnt[4], 1),
             "----同键连击----",
-            "2连击\t" + FormatResult(repeat2, 2),
-            "3连击\t" + FormatResult(repeat3, 3),
-            "4连击\t" + FormatResult(repeat4, 4),
+            "2连击\t" + FormatResult(repeatCnt[0], 2),
+            "3连击\t" + FormatResult(repeatCnt[1], 3),
+            "4连击\t" + FormatResult(repeatCnt[2], 4),
             $"5+连击\t{repeatCnt[3]}",
             "----同指跨排----",
             "1排\t" + FormatResult(leapCnt[0], 2),
@@ -118,8 +110,8 @@ internal static class CodeStats
         ]);
         return report;
 
-        string FormatResult(int cnt, int nGramLen) {
-            var total = code.Length - nGramLen + 1;
+        string FormatResult(int cnt, int windowSize) {
+            var total = code.Length - windowSize + 1;
             var ratio = 100d * cnt / total;
             return $"{cnt}\t{ratio:0.######} %";
         }
