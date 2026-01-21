@@ -68,9 +68,11 @@ internal sealed class Encoder(CostMap costs, TrieDict dict, FrozenSet<(string, c
             // 更新到达指定索引的最小开销编码
             void UpdateMin(int tgtIdx, string code2, double cost2) {
                 var ns = needSpace.Contains((last, code2[0]));
-                var cost = ns
-                    ? cost1 + costs[[code1[^1], ' ']] + costs[[' ', code2[0]]] + cost2
-                    : cost1 + costs[[code1[^1], code2[0]]] + cost2;
+                var cost = last.Length == 0
+                    ? cost2
+                    : ns
+                        ? cost1 + costs[[last[^1], ' ']] + costs[[' ', code2[0]]] + cost2
+                        : cost1 + costs[[last[^1], code2[0]]] + cost2;
                 if (dp[tgtIdx]?.Cost <= cost)
                     return;
                 var code = ns

@@ -14,7 +14,8 @@ try {
     foreach (var inPath in config.Texts) {
         var (textLen, code, cost) = encoder.Encode(inPath);
         var report = CodeStats.Analyze(textLen, code, cost, config.Layout);
-        var outPath = OutputReport(inPath, report);
+        var outPath = GenOutPath(inPath);
+        File.WriteAllLines(outPath, report);
         WriteLine($"已完成：{inPath} -> {outPath}");
     }
 } catch (Exception ex) {
@@ -25,15 +26,12 @@ try {
     WriteLine("程序结束");
 }
 
-static string OutputReport(string inPath, IEnumerable<string> report) {
-    var dir = Path.GetDirectoryName(inPath);
-    if (!Path.Exists(dir))
-        throw new InvalidOperationException("无法获取待编码文本的目录");
+static string GenOutPath(string inPath) {
+    var dir = Path.GetDirectoryName(inPath) ?? throw new InvalidOperationException("无法获取待编码文本的目录");
     var name = Path.GetFileNameWithoutExtension(inPath);
     var ext = Path.GetExtension(inPath);
     var outPath = Path.Combine(dir, $"{name}_Code{ext}");
     for (var i = 2; File.Exists(outPath); i++)
         outPath = Path.Combine(dir, $"{name}_Code_{i}{ext}");
-    File.WriteAllLines(outPath, report);
     return outPath;
 }
