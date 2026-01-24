@@ -1,6 +1,7 @@
 ﻿using ChnDPEncoder.Core;
 using ChnDPEncoder.Models;
 using static System.Console;
+using static System.IO.Path;
 
 try {
     WriteLine(
@@ -9,29 +10,30 @@ try {
       + "仓库：https://github.com/GarthTB/ChnDPEncoder\n"
       + "加载配置...");
     var config = ConfigModel.FromToml("Config.toml");
-    Encoder encoder = new(config.Costs, config.Dict, config.NeedSpace);
-    WriteLine("配置就绪，开始编码...");
+    Encoder encoder = new(config.Costs, config.Dict, config.SpaceCodes);
+    WriteLine("配置就绪！");
     foreach (var inPath in config.Texts) {
-        var (textLen, code, cost) = encoder.Encode(inPath);
-        var report = CodeStats.Analyze(textLen, code, cost, config.Layout);
         var outPath = GenOutPath(inPath);
-        File.WriteAllLines(outPath, report);
-        WriteLine($"已完成：{inPath} -> {outPath}");
+        WriteLine($"{inPath}编码中...");
+        var (textLen, codeLen, costSum) = encoder.Encode(inPath, outPath, 4096);
+        WriteLine("编码完成，分析中...");
+        CodeStats.Analyze(textLen, codeLen, costSum, outPath, config.Layout, 4096);
+        WriteLine($"分析完成，结果在{outPath}");
     }
 } catch (Exception ex) {
     ForegroundColor = ConsoleColor.Red;
     WriteLine($"异常中断：{ex.Message}\n栈追踪：\n{ex.StackTrace}");
     ResetColor();
 } finally {
-    WriteLine("程序结束");
+    WriteLine("程序结束，已退出");
 }
 
 static string GenOutPath(string inPath) {
-    var dir = Path.GetDirectoryName(inPath) ?? throw new InvalidOperationException("无法获取待编码文本的目录");
-    var name = Path.GetFileNameWithoutExtension(inPath);
-    var ext = Path.GetExtension(inPath);
-    var outPath = Path.Combine(dir, $"{name}_Code{ext}");
+    var dir = GetDirectoryName(inPath) ?? throw new InvalidOperationException("无法获取待编码文本的目录");
+    var name = GetFileNameWithoutExtension(inPath);
+    var ext = GetExtension(inPath);
+    var outPath = Combine(dir, $"{name}_Code{ext}");
     for (var i = 2; File.Exists(outPath); i++)
-        outPath = Path.Combine(dir, $"{name}_Code_{i}{ext}");
+        outPath = Combine(dir, $"{name}_Code_{i}{ext}");
     return outPath;
 }

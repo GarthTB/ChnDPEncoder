@@ -6,46 +6,46 @@ using Models;
 /// <summary> 最小开销编码求解器 </summary>
 /// <param name="costs"> 键对开销表 </param>
 /// <param name="dict"> 前缀树词库 </param>
-/// <param name="needSpace"> 需要空格分隔的编码 </param>
-internal sealed class Encoder(CostMap costs, TrieDict dict, FrozenSet<(string, char)> needSpace)
+/// <param name="spaceCodes"> 需要空格分隔的编码 </param>
+internal sealed class Encoder(CostMap costs, TrieDict dict, FrozenSet<(string, char)> spaceCodes)
 {
-    /// <summary> 分块字符数 </summary>
-    private const int ChunkSize = 1 << 12;
-
     /// <summary> 求解最小开销编码 </summary>
-    public (int TextLen, int CodeLen, double Cost) Encode(string inPath, string outPath) {
-        var chunk = ""; // 当前文本块
-        int curIdx = 0, maxIdx = 0; // 当前索引、已抵达的最远索引
-        int textLen = 0, codeLen = 0, chunkCnt; // 总字数、当前块字数
+    public (int TextLen, int CodeLen, double CostSum) Encode(
+        string inPath,
+        string outPath,
+        int chunkSize) {
+        int textLen = 0, codeLen = 0; // 总字数、总码数
         (string Prev, string Code, double Cost)?[] dp = [("", "", 0)]; // 到达各索引的最小开销编码
         List<(int Len, string Code, double Cost)> wordInfos = new(8); // 当前索引处的起始词的长度、编码、开销
 
-        var buffer = new char[ChunkSize];
+        var chunk = ""; // 当前文本块
+        int curIdx = 0, maxIdx = 0, charsRead; // 当前索引、已抵达的最远索引、新块字数
+        var buffer = new char[chunkSize];
         using StreamWriter writer = new(outPath, true);
         using (StreamReader reader = new(inPath))
-            while ((chunkCnt = reader.Read(buffer, 0, ChunkSize)) > 0) {
-                Console.Write($"\r第 {textLen} - {textLen += chunkCnt} 字...");
+            while ((charsRead = reader.Read(buffer, 0, chunkSize)) > 0)
                 for (PrepareChunk(); dict.FindPrefixes(chunk.AsSpan(curIdx), wordInfos); curIdx++)
                     ProcCurIdx();
-            }
         for (; curIdx < chunk.Length; curIdx++) {
             _ = dict.FindPrefixes(chunk.AsSpan(curIdx), wordInfos);
             ProcCurIdx();
         }
 
         var (endCode, endPart, costSum) = dp[^1]!.Value; // 一定可达
+        if (endCode.Length == 0)
+            throw new ArgumentException("文本为空", nameof(inPath));
         endPart += ' '; // 空格上屏末词
         costSum += costs[[endCode[^1], ' ']];
         writer.Write(endPart);
         codeLen += endPart.Length;
-        Console.WriteLine($"\n编码完成，共 {textLen} 字");
         return (textLen, codeLen, costSum);
 
         // 将新块接在剩余部分之后
         void PrepareChunk() {
-            chunk = string.Concat(chunk.AsSpan(curIdx), buffer.AsSpan(0, chunkCnt));
+            Console.Write($"\r第 {textLen} - {textLen += charsRead} 字...");
+            chunk = string.Concat(chunk.AsSpan(curIdx), buffer.AsSpan(0, charsRead));
             var rest = dp.AsSpan(curIdx);
-            var newDp = new (string, string, double)?[rest.Length + chunkCnt];
+            var newDp = new (string, string, double)?[rest.Length + charsRead];
             rest.CopyTo(newDp);
             dp = newDp;
             maxIdx -= curIdx;
@@ -55,7 +55,7 @@ internal sealed class Encoder(CostMap costs, TrieDict dict, FrozenSet<(string, c
         // 处理当前索引
         void ProcCurIdx() {
             var (prev, code1, cost1) = dp[curIdx]!.Value; // 一定可达
-            if (curIdx == maxIdx && code1.Length > ChunkSize) { // 当前为全局最优，写入前部
+            if (curIdx == maxIdx && code1.Length > chunkSize) { // 确定最优，写入前部
                 writer.Write(code1);
                 codeLen += code1.Length;
                 code1 = "";
@@ -67,15 +67,15 @@ internal sealed class Encoder(CostMap costs, TrieDict dict, FrozenSet<(string, c
 
             // 更新到达指定索引的最小开销编码
             void UpdateMin(int tgtIdx, string code2, double cost2) {
-                var ns = needSpace.Contains((prev, code2[0]));
+                var needSpace = spaceCodes.Contains((prev, code2[0]));
                 var cost = prev.Length == 0
                     ? cost2
-                    : ns
+                    : needSpace
                         ? cost1 + costs[[prev[^1], ' ']] + costs[[' ', code2[0]]] + cost2
                         : cost1 + costs[[prev[^1], code2[0]]] + cost2;
                 if (dp[tgtIdx]?.Cost <= cost)
                     return;
-                var code = ns
+                var code = needSpace
                     ? code1 + ' ' + code2
                     : code1 + code2;
                 dp[tgtIdx] = (code2, code, cost);

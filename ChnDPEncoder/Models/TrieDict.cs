@@ -10,7 +10,7 @@ internal sealed class TrieDict
     private readonly FrozenDictionary<char, Node> _root;
 
     /// <summary> 将词库文件解析为前缀树 </summary>
-    public TrieDict(string path, CostMap costMap, out FrozenSet<(string, char)> needSpace) {
+    public TrieDict(string path, CostMap costMap, out FrozenSet<(string, char)> spaceCodes) {
         var entries = File.ReadLines(path)
             .Select(static (line, idx) => (idx, Parts: line.Split('\t', 4)))
             .Where(static tup => tup.Parts is [{ Length: > 0 } word, { Length: > 0 }, ..]
@@ -39,7 +39,7 @@ internal sealed class TrieDict
                 node.Min = (code, cost);
         }
         _root = root.Children.ToFrozenDictionary();
-        needSpace = codes.Where(static code => code.Length > 1)
+        spaceCodes = codes.Where(static code => code.Length > 1)
             .Select(static code => (code[..^1], code[^1]))
             .ToFrozenSet();
     }

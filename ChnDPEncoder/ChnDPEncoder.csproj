@@ -10,14 +10,12 @@
         <InvariantGlobalization>true</InvariantGlobalization>
         <ApplicationIcon>Assets\Icon.ico</ApplicationIcon>
         <Version>1.0.0</Version>
-        <Title>ChnDPEncoder</Title>
         <Authors>Garth TB | 天卜 &lt;g-art-h@outlook.com&gt;</Authors>
         <Description>Computes minimal-cost encoding for text via dynamic programming | 基于动态规划，计算文章的最小开销编码</Description>
         <Copyright>Copyright (c) 2026 Garth TB | 天卜</Copyright>
         <PackageProjectUrl>https://github.com/GarthTB/ChnDPEncoder</PackageProjectUrl>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageIcon>Assets\Icon.png</PackageIcon>
-        <Company>Garth TB | 天卜 &lt;g-art-h@outlook.com&gt;</Company>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
