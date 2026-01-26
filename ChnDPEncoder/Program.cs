@@ -5,7 +5,7 @@ using static System.IO.Path;
 
 try {
     Write(
-        "ChnDPEncoder 动态规划赛码器 1.0.0 (20260122)\n"
+        "ChnDPEncoder 动态规划赛码器 1.1.0 (20260127)\n"
       + "作者：Garth TB | 天卜 <g-art-h@outlook.com>\n"
       + "仓库：https://github.com/GarthTB/ChnDPEncoder\n"
       + "加载配置...\n");
@@ -15,9 +15,9 @@ try {
     foreach (var inPath in config.Texts) {
         var outPath = GenOutPath(inPath);
         Write($"{inPath}编码中...");
-        var (textLen, codeLen, costSum) = encoder.Encode(inPath, outPath, 262144);
+        var (textLen, codeLen, costSum) = encoder.Encode(inPath, outPath, 131072);
         Write($"完成！共{textLen}字，{codeLen}码。\n分析中...");
-        CodeStats.Analyze(textLen, codeLen, costSum, outPath, config.Layout, 262144);
+        CodeStats.Analyze(textLen, codeLen, costSum, outPath, config.Layout, 131072);
         Write($"完成！\n结果已存至{outPath}\n");
     }
 } catch (Exception ex) {
