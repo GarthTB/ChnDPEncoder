@@ -4,12 +4,12 @@
 cost_map = "CostMap.tsv"
 
 # RIME词库路径
-rime_dict = "RIME.dict.yaml"
+rime_dict = "method.dict.yaml"
 
 # 待编码文本路径
 texts = ["Text.txt"]
 
-# 键盘布局：各手指和各排的键值
+# （可选）键盘布局：各手指和各排的键值
 layout = [
     "1qaz", # 左小指
     "2wsx", # 左无名指
