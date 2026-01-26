@@ -1,6 +1,7 @@
 namespace ChnDPEncoder.Core;
 
 using System.Collections.Frozen;
+using System.Text;
 using Models;
 
 /// <summary> 最小开销编码求解器 </summary>
@@ -17,6 +18,7 @@ internal sealed class Encoder(CostMap costs, TrieDict dict, FrozenSet<(string, c
         int textLen = 0, codeLen = 0; // 总字数、总码数
         (string Prev, string Code, double Cost)?[] dp = [("", "", 0)]; // 到达各索引的最小开销编码
         List<(int Len, string Code, double Cost)> wordInfos = new(8); // 当前索引处的起始词的长度、编码、开销
+        StringBuilder frozenCode = new(chunkSize * 2); // 已固化的编码前部
 
         var chunk = ""; // 当前文本块
         int curIdx = 0, maxIdx = 0, charsRead; // 当前索引、已抵达的最远索引、新块字数
@@ -34,10 +36,13 @@ internal sealed class Encoder(CostMap costs, TrieDict dict, FrozenSet<(string, c
         var (endCode, endPart, costSum) = dp[^1]!.Value; // 一定可达
         if (endCode.Length == 0)
             throw new ArgumentException("文本为空", nameof(inPath));
-        endPart += ' '; // 空格上屏末词
-        costSum += costs[[endCode[^1], ' ']];
-        writer.WriteLine(endPart); // 留一个换行给统计
-        codeLen += endPart.Length;
+        var endBlock = frozenCode.Append(endPart);
+        if (char.IsAsciiLetter(endCode[^1])) {
+            _ = endBlock.Append(' '); // 空格上屏末词
+            costSum += costs[[endCode[^1], ' ']];
+        }
+        writer.WriteLine(endBlock); // 换行分隔统计数据
+        codeLen += endBlock.Length;
         return (textLen, codeLen, costSum);
 
         // 将新块接在剩余部分之后
@@ -55,15 +60,18 @@ internal sealed class Encoder(CostMap costs, TrieDict dict, FrozenSet<(string, c
         // 处理当前索引
         void ProcCurIdx() {
             var (prev, code1, cost1) = dp[curIdx]!.Value; // 一定可达
-            if (curIdx == maxIdx && code1.Length > chunkSize) { // 确定最优，写入前部
-                writer.Write(code1);
-                codeLen += code1.Length;
+            if (curIdx == maxIdx) { // 确定最优，固化前部
+                if (frozenCode.Append(code1).Length > chunkSize) { // 写入固化部分
+                    writer.Write(frozenCode);
+                    codeLen += frozenCode.Length;
+                    frozenCode.Clear();
+                }
                 code1 = "";
             }
             foreach (var (len, code2, cost2) in wordInfos)
                 UpdateMin(curIdx + len, code2, cost2);
             if (dp[curIdx + 1] is null) // 填入原字符兜底
-                UpdateMin(curIdx + 1, chunk[curIdx].ToString(), 0);
+                UpdateMin(curIdx + 1, new(chunk[curIdx], 1), 0);
 
             // 更新到达指定索引的最小开销编码
             void UpdateMin(int tgtIdx, string code2, double cost2) {

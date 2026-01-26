@@ -4,28 +4,28 @@ using static System.Console;
 using static System.IO.Path;
 
 try {
-    WriteLine(
+    Write(
         "ChnDPEncoder 动态规划赛码器 1.0.0 (20260122)\n"
       + "作者：Garth TB | 天卜 <g-art-h@outlook.com>\n"
       + "仓库：https://github.com/GarthTB/ChnDPEncoder\n"
-      + "加载配置...");
+      + "加载配置...\n");
     var config = ConfigModel.FromToml("Config.toml");
     Encoder encoder = new(config.Costs, config.Dict, config.SpaceCodes);
-    WriteLine("配置就绪！");
+    Write("就绪！\n");
     foreach (var inPath in config.Texts) {
         var outPath = GenOutPath(inPath);
-        WriteLine($"{inPath}编码中...");
-        var (textLen, codeLen, costSum) = encoder.Encode(inPath, outPath, 4096);
-        WriteLine("编码完成，分析中...");
-        CodeStats.Analyze(textLen, codeLen, costSum, outPath, config.Layout, 4096);
-        WriteLine($"分析完成，结果在{outPath}");
+        Write($"{inPath}编码中...");
+        var (textLen, codeLen, costSum) = encoder.Encode(inPath, outPath, 262144);
+        Write($"完成！共{textLen}字，{codeLen}码。\n分析中...");
+        CodeStats.Analyze(textLen, codeLen, costSum, outPath, config.Layout, 262144);
+        Write($"完成！\n结果已存至{outPath}\n");
     }
 } catch (Exception ex) {
     ForegroundColor = ConsoleColor.Red;
-    WriteLine($"异常中断：{ex.Message}\n栈追踪：\n{ex.StackTrace}");
+    Write($"异常中断：{ex.Message}\n栈追踪：\n{ex.StackTrace}\n");
     ResetColor();
 } finally {
-    WriteLine("程序结束，已退出");
+    Write("程序已退出\n");
 }
 
 static string GenOutPath(string inPath) {
