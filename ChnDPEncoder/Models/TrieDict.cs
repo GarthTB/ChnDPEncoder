@@ -30,10 +30,10 @@ internal sealed class TrieDict
                         ? child
                         : n.Children[c] = new());
             var code = parts[1];
-            for (var (prefix, i) = (code, 2); !codes.Add(code);)
-                (code, i) = i < 10
-                    ? (prefix + i, i + 1) // 2-9：数字选重
-                    : (prefix += '=', 2); // 10：等号翻页
+            for (var (i, prefix) = (2, code); !codes.Add(code);)
+                (i, code) = i < 10
+                    ? (i + 1, prefix + i) // 2-9：数字选重
+                    : (2, prefix += '='); // 10：等号翻页
             var cost = costMap[code];
             if (node.Min is null || node.Min?.Cost > cost)
                 node.Min = (code, cost);

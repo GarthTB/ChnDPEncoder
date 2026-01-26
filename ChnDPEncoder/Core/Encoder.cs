@@ -36,7 +36,7 @@ internal sealed class Encoder(CostMap costs, TrieDict dict, FrozenSet<(string, c
             throw new ArgumentException("文本为空", nameof(inPath));
         endPart += ' '; // 空格上屏末词
         costSum += costs[[endCode[^1], ' ']];
-        writer.Write(endPart);
+        writer.WriteLine(endPart); // 留一个换行给统计
         codeLen += endPart.Length;
         return (textLen, codeLen, costSum);
 
