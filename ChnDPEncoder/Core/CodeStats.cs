@@ -1,5 +1,6 @@
 namespace ChnDPEncoder.Core;
 
+using System.Text;
 using Models;
 
 /// <summary> 编码统计数据 </summary>
@@ -25,7 +26,8 @@ internal static class CodeStats
                     $"总开销\t{costSum:0.######}",
                     $"字均码长\t{1d * codeLen / textLen:0.######}",
                     $"字均开销\t{costSum / textLen:0.######}",
-                    $"码均开销\t{costSum / (codeLen - 1):0.######}"
+                    $"码均开销\t{costSum / (codeLen - 1):0.######}",
+                    "未提供键盘布局，无更多数据"
                 ]);
             return;
         }
@@ -38,7 +40,7 @@ internal static class CodeStats
         var switchCnt = 0L; // 互击计数
 
         var prev = '\0'; // 上一码
-        using (StreamReader reader = new(outPath)) {
+        using (StreamReader reader = new(outPath, Encoding.UTF8, true, (int)(1.2 * chunkSize))) {
             int charsRead; // 新块码数
             var buffer = new char[chunkSize];
             if ((charsRead = reader.Read(buffer, 0, chunkSize)) > 0) {

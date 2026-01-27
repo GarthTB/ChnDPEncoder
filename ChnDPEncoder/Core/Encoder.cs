@@ -18,13 +18,13 @@ internal sealed class Encoder(CostMap costs, TrieDict dict, FrozenSet<(string, c
         long textLen = 0, codeLen = 0; // 总字数、总码数
         (string Prev, string Code, double Cost)?[] dp = [("", "", 0)]; // 到达各索引的最小开销编码
         List<(int Len, string Code, double Cost)> wordInfos = new(8); // 当前索引处的起始词的长度、编码、开销
-        StringBuilder frozenCode = new(chunkSize * 2); // 已固化的编码前部
+        StringBuilder frozenCode = new(2 * chunkSize); // 已固化的编码前部
 
         var chunk = ""; // 当前文本块
         int curIdx = 0, maxIdx = 0, charsRead; // 当前索引、已抵达的最远索引、新块字数
         var buffer = new char[chunkSize];
-        using StreamWriter writer = new(outPath, true);
-        using (StreamReader reader = new(inPath))
+        using StreamWriter writer = new(outPath, true, Encoding.UTF8, 2 * chunkSize);
+        using (StreamReader reader = new(inPath, Encoding.UTF8, true, 3 * chunkSize))
             while ((charsRead = reader.Read(buffer, 0, chunkSize)) > 0)
                 for (PrepareChunk(); dict.FindPrefixes(chunk.AsSpan(curIdx), wordInfos); curIdx++)
                     ProcCurIdx();
