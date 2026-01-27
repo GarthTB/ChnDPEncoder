@@ -9,7 +9,7 @@
         <PublishAot>true</PublishAot>
         <InvariantGlobalization>true</InvariantGlobalization>
         <ApplicationIcon>Assets\Icon.ico</ApplicationIcon>
-        <Version>1.1.0</Version>
+        <Version>1.1.1</Version>
         <Authors>Garth TB | 天卜 &lt;g-art-h@outlook.com&gt;</Authors>
         <Description>Computes minimal-cost encoding for text via dynamic programming | 基于动态规划，计算文章的最小开销编码</Description>
         <Copyright>Copyright (c) 2026 Garth TB | 天卜</Copyright>

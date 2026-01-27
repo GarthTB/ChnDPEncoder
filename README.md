@@ -2,7 +2,7 @@
 
 ![Tech Stack](https://skillicons.dev/icons?i=dotnet,cs,windows)
 [![License MIT](https://img.shields.io/badge/License-MIT-750014)](https://mit-license.org)
-[![Latest 1.1.0](https://img.shields.io/badge/Latest-1.1.0-0FBF3E?logo=github)](https://github.com/GarthTB/ChnDPEncoder/releases/latest)
+[![Latest 1.1.1](https://img.shields.io/badge/Latest-1.1.1-0FBF3E?logo=github)](https://github.com/GarthTB/ChnDPEncoder/releases/latest)
 
 一个轻量级控制台应用程序，用于计算特定中文输入法方案下
 整篇文本的最小开销编码，并简要分析该编码的键盘使用情况，
@@ -55,6 +55,8 @@
 [1]陈一凡,张鹿,周志农. 键位相关速度当量的研究[J].中文信息学报,1990,(04):12-18+11.
 
 ## 版本日志
+
+### 1.1.1 (20260128) 修复码长溢出问题，优化提示信息
 
 ### 1.1.0 (20260127)
 

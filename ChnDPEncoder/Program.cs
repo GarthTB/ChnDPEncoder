@@ -5,7 +5,7 @@ using static System.IO.Path;
 
 try {
     Write(
-        "ChnDPEncoder 动态规划赛码器 1.1.0 (20260127)\n"
+        "ChnDPEncoder 动态规划赛码器 1.1.1 (20260128)\n"
       + "作者：Garth TB | 天卜 <g-art-h@outlook.com>\n"
       + "仓库：https://github.com/GarthTB/ChnDPEncoder\n"
       + "加载配置...");
