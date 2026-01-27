@@ -11,11 +11,11 @@ using Models;
 internal sealed class Encoder(CostMap costs, TrieDict dict, FrozenSet<(string, char)> spaceCodes)
 {
     /// <summary> 求解最小开销编码 </summary>
-    public (int TextLen, int CodeLen, double CostSum) Encode(
+    public (long TextLen, long CodeLen, double CostSum) Encode(
         string inPath,
         string outPath,
         int chunkSize) {
-        int textLen = 0, codeLen = 0; // 总字数、总码数
+        long textLen = 0, codeLen = 0; // 总字数、总码数
         (string Prev, string Code, double Cost)?[] dp = [("", "", 0)]; // 到达各索引的最小开销编码
         List<(int Len, string Code, double Cost)> wordInfos = new(8); // 当前索引处的起始词的长度、编码、开销
         StringBuilder frozenCode = new(chunkSize * 2); // 已固化的编码前部

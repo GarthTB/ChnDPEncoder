@@ -14,7 +14,7 @@ try {
     Write("就绪！\n");
     foreach (var inPath in config.Texts) {
         var outPath = GenOutPath(inPath);
-        Write($"{inPath}编码中...");
+        Write($"{inPath}编码中...\n");
         var (textLen, codeLen, costSum) = encoder.Encode(inPath, outPath, 131072);
         Write($"完成！共{textLen}字，{codeLen}码。\n分析中...");
         CodeStats.Analyze(textLen, codeLen, costSum, outPath, config.Layout, 131072);

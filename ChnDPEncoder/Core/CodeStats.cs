@@ -7,8 +7,8 @@ internal static class CodeStats
 {
     /// <summary> 分析编码统计数据 </summary>
     public static void Analyze(
-        int textLen,
-        int codeLen,
+        long textLen,
+        long codeLen,
         double costSum,
         string outPath,
         LayoutMap? layout,
@@ -30,12 +30,12 @@ internal static class CodeStats
             return;
         }
 
-        var fingerCnt = new int[9]; // 各手指计数
-        var rowCnt = new int[5]; // 各排计数
+        var fingerCnt = new long[9]; // 各手指计数
+        var rowCnt = new long[5]; // 各排计数
         var repeatLen = 1; // 连击长度
-        var repeatCnt = new int[4]; // 2-5+连击计数
-        var leapCnt = new int[3]; // 同指跨1-3排计数
-        var switchCnt = 0; // 互击计数
+        var repeatCnt = new long[4]; // 2-5+连击计数
+        var leapCnt = new long[3]; // 同指跨1-3排计数
+        var switchCnt = 0L; // 互击计数
 
         var prev = '\0'; // 上一码
         using (StreamReader reader = new(outPath)) {
@@ -130,7 +130,7 @@ internal static class CodeStats
             }
         }
 
-        string FormatResult(int cnt, int windowSize) {
+        string FormatResult(long cnt, int windowSize) {
             var max = codeLen - windowSize + 1;
             var ratio = 100d * cnt / max;
             return $"{cnt}\t{ratio:0.######} %";
