@@ -1,5 +1,7 @@
 # ChnDPEncoder 动态规划赛码器
 
+# 20260501：项目已由Rust重构至[新仓库](https://github.com/GarthTB/cn-input-encode)，此仓库不再维护
+
 ![Tech Stack](https://skillicons.dev/icons?i=dotnet,cs,windows)
 [![License MIT](https://img.shields.io/badge/License-MIT-750014)](https://mit-license.org)
 [![Latest 1.1.1](https://img.shields.io/badge/Latest-1.1.1-0FBF3E?logo=github)](https://github.com/GarthTB/ChnDPEncoder/releases/latest)
